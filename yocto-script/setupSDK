@@ -1,5 +1,3 @@
-
-# Determine the root directory Path
 if [ -n "$BASH_SOURCE" ]; then
 	export ROOT=$(readlink -f $(dirname "$BASH_SOURCE"))
 elif [ -n "$ZSH_NAME" ]; then
@@ -8,11 +6,10 @@ else
 	export ROOT=$(readlink -f ${PWD})
 fi
 
-# Load the xilinx get-machine-conf 
-export PATH=$PATH:$ROOT/scripts
-if [ -d $ROOT/source-layers/meta-xilinx/meta-xilinx-core/gen-machine-conf ]; then
-        export PATH=$PATH:$ROOT/source-layers/meta-xilinx/meta-xilinx-core/gen-machine-conf
+# Load the xilinx get-machine-conf
+if [ -d $ROOT/source/meta-xilinx/meta-xilinx-core/gen-machine-conf ]; then
+        export PATH=$PATH:$ROOT/source/meta-xilinx/meta-xilinx-core/gen-machine-conf
 fi
 
 
-source $ROOT/source-layers/poky/oe-init-build-env "$@"
+source $ROOT/sources/poky/oe-init-build-env "$@"
