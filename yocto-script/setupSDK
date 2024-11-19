@@ -6,6 +6,9 @@ else
 	export ROOT=$(readlink -f ${PWD})
 fi
 
+export TEMPLATECONF=$ROOT/sources/meta-mncux/conf/templates/default
+export PATH=$PATH:$ROOT/scripts
+
 # Load the xilinx get-machine-conf
 if [ -d $ROOT/source/meta-xilinx/meta-xilinx-core/gen-machine-conf ]; then
         export PATH=$PATH:$ROOT/source/meta-xilinx/meta-xilinx-core/gen-machine-conf
