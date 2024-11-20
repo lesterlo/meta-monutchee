@@ -1,0 +1,30 @@
+{
+    "name": "MNCux builder",
+    "context": "..",
+    "dockerFile": "base.Dockerfile",
+    // "postCreateCommand": "bash ",
+    "postStartCommand": "/bin/zsh",
+    "containerEnv": { "DEVCONTAINER": "1" },
+    "appPort": ["12345:12345"],
+    "runArgs": ["-e", "GIT_EDITOR=code --wait"],
+    "customizations": {
+      "vscode": {
+        "extensions": [       
+            "ms-vscode.cpptools",
+            "ms-vscode.cmake-tools",
+            "ms-azuretools.vscode-docker",
+            "yocto-project.yocto-bitbake"
+        ],
+        
+        "settings": {
+          "C_Cpp.default.compilerPath": "/opt",
+          "terminal.integrated.profiles.linux": {
+            "zsh": {
+              "path": "/usr/bin/zsh"
+            }
+          },
+          "terminal.integrated.defaultProfile.linux": "zsh"
+        }
+      }
+    }
+  }
