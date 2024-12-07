@@ -11,7 +11,7 @@ export XSCT="$ROOT/build/xsct/Vitis/$(basename $(ls -d $ROOT/build/xsct/Vitis/*/
 alias patch_xsct="mv $ROOT/build/xsct/Vitis/2024.1/bin/unwrapped/lnx64.o/rlwrap $ROOT/build/xsct/Vitis/2024.1/bin/unwrapped/lnx64.o/rlwrap.old && ln -s /usr/bin/rlwrap xsct/Vitis/2024.1/bin/unwrapped/lnx64.o/rlwrap"
 
 # Xilinx Yocto Default
-export TEMPLATECONF=$ROOT/sources/meta-mncux/conf/templates/default
+export TEMPLATECONF=$ROOT/sources/meta-mncos/conf/templates/default
 export PATH=$PATH:$ROOT/scripts
 
 # Load the xilinx get-machine-conf
