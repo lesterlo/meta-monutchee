@@ -58,7 +58,7 @@ after 500
 
 # uboot
 puts "Downloading U-boot"
-dow uboot.elf
+dow u-boot.elf
 after 500
 
 
