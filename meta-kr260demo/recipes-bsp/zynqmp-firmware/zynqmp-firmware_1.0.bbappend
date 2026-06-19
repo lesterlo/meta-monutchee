@@ -33,4 +33,4 @@ SRC_URI[r5c1.sha256sum] = "a2f348a4843bc6e5ff7de2e07a46c4f747c69156f4b1756b8a707
 
 # Activate the shared recipe for the KR260 machine.
 # TODO(kr260): change to the real KR260 machine name.
-COMPATIBLE_MACHINE = "^kr260demo
+COMPATIBLE_MACHINE = "^kr260demo$"
