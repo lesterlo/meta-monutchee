@@ -14,7 +14,7 @@
 #      checksums:
 #        bitbake -c fetch zynqmp-firmware
 
-FPGA_FIRMWARE_RELEASE_TAG = "v0.0.1"
+FPGA_FIRMWARE_RELEASE_TAG = "v0.0.2"
 
 FPGA_FIRMWARE_PS_BASEURL = "https://github.com/lesterlo/KR260Demo_PS/releases/download"
 FPGA_FIRMWARE_PL_BASEURL = "https://github.com/lesterlo/KR260Demo_PL/releases/download"
