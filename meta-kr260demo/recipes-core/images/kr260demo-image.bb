@@ -18,6 +18,9 @@ IMAGE_INSTALL:append = " \
     apu-rpu-ctl \
 "
 
+# This product image does not need the generated machine's VCU codec stack.
+IMAGE_FEATURES:remove = "hwcodecs"
+
 # Board-specific dev flow: TFTP/JTAG boot export (provided by meta-fpga-util).
 IMAGE_CLASSES:append = " export-tftpboot-file"
 JTAG_LOADER_TCL = "${FPGA_UTIL_LAYERDIR}/recipes-core/images/files/load-jtag-image.tcl"
