@@ -3,7 +3,7 @@ LICENSE = "MIT"
 
 require recipes-core/images/include/mncos-image-common.inc
 
-COMPATIBLE_MACHINE = "^zudemo$"
+COMPATIBLE_MACHINE = "^kr260demo$"
 
 MNCOS_IMAGE_ROLE = "main"
 MNCOS_IMAGE_LABEL = "MNCOS ZUBOARD MAIN SYSTEM IMAGE"
