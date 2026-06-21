@@ -6,8 +6,8 @@
 You can now run 'bitbake <target>'
 
 Common targets are:
-    zudemo-image
-    zudemo-production-flash-image
+    kr260demo-image
+    kr260demo-production-flash-image
 
 You can also run generated qemu images with a command like 'runqemu qemux86-64'.
 
