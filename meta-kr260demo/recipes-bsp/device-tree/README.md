@@ -6,7 +6,7 @@ Please use the Xilinx SDT workflow.
 ```bash
 echo 'set_dt_param \
    -xsa ../../runtime-generated/bin_file/KR260Demo_PL.xsa\
-   -include_dts ../sources/meta-monutchee/meta-kr260demo/recipes-bsp/device-tree/files/zynqmp-smk-k26-reva_aio.dtsi \
+   -board_dts zynqmp-smk-k26-reva \
    -dir ../../runtime-generated/vivado_SDT_out/ ; \
    generate_sdt ; exit' | sdtgen
 ```
