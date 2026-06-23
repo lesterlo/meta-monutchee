@@ -67,13 +67,9 @@ do_install:append() {
     fi
 
     # Auto-generate the dfx-mgr manifest: plain full bitstream, no XRT, no DFX slots.
-    cat > ${FW_PATH}/shell.json <<EOF
-{
-    "shell_type": "PL_FLAT",
-    "num_pl_slots": 0,
-    "num_aie_slots": 0
-}
-EOF
+    # (Single printf line: a heredoc with a column-0 '}' confuses BitBake's
+    # shell-function brace matching and breaks parsing.)
+    printf '{\n    "shell_type": "PL_FLAT",\n    "num_pl_slots": 0,\n    "num_aie_slots": 0\n}\n' > ${FW_PATH}/shell.json
 
     # Cortex-R5 firmware into /lib/firmware for manual remoteproc loading:
     #   echo R5c0.elf > /sys/class/remoteproc/remoteproc0/firmware ; echo start > .../state
