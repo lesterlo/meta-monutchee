@@ -3,8 +3,9 @@ DESCRIPTION = "Packages the KR260Demo programmable-logic full bitstream, its \
 lopper-generated device-tree overlay (a /plugin/ overlay targeting &fpga_full) and an \
 auto-generated shell.json into /lib/firmware/xilinx/kr260demo/, so the design loads with \
 'xmutil loadapp kr260demo'. The Cortex-R5 firmware R5c0.elf/R5c1.elf are installed into \
-/lib/firmware for manual remoteproc loading; dfx-mgr/xmutil on the 2025.2 release does \
-NOT load RPU firmware."
+the dfx-mgr RPU base layout /lib/firmware/xilinx/${RPU_FW_BASE}/rpu/<core>/ so dfx-mgr \
+(>= 2026.1) can load them on demand, and also as flat /lib/firmware copies for manual \
+remoteproc loading."
 
 LICENSE = "CLOSED"
 
@@ -26,6 +27,22 @@ FW_INSTALL_DIR = "kr260demo"
 # still packaged either way; this controls only /etc/dfx-mgrd/default_firmware.
 KR260DEMO_DFX_AUTOLOAD ?= "0"
 
+# dfx-mgr (>= 2026.1) RPU base directory name.
+#
+# dfx-mgr scans the dirs in daemon.conf "firmware_location" (/lib/firmware/xilinx)
+# and treats any directory literally named "rpu"/"RPU" as an RPU base design -- no
+# shell.json required (see dfx-mgr src/daemon_helper.c accel_dir_add / parse_packages
+# and src/rpu.c). Inside that "rpu" dir, each numeric subdir <n> is an RPU slot whose
+# number is used verbatim as the remoteproc index: dfx-mgr does
+#   echo <fw>.elf > /sys/class/remoteproc/remoteproc<n>/firmware ; echo start > .../state
+# Each .elf in slot <n> becomes a loadable accelerator named after the file (sans .elf).
+# So:  rpu/0/R5c0.elf -> remoteproc0 (R5 core 0),  rpu/1/R5c1.elf -> remoteproc1 (core 1).
+#
+# IMPORTANT: this base must NOT live under the PL app dir (kr260demo/) -- that dir has a
+# shell.json, and dfx-mgr stops recursing at the first base it finds, so a nested rpu/
+# would never be discovered. Hence a sibling base dir, distinct from the PL app dir name.
+RPU_FW_BASE ?= "kr260demo-rpu"
+
 # Inputs taken straight from the workspace / gen-machineconf output.
 # TOPDIR is <project>/yocto-build/build.
 #  - KR260Demo_PL.bit : PL bitstream exported with the SDT handoff, so the packaged
@@ -40,7 +57,7 @@ FILESEXTRAPATHS:prepend := "${TOPDIR}/conf/dts/kr260demo/pl-overlay-full:${TOPDI
 
 SRC_URI = " \
     file://KR260Demo_PL.bit \
-    file://pl.dtsi \
+    file://pl.dtso \
     file://R5c0.elf \
     file://R5c1.elf \
 "
@@ -59,19 +76,29 @@ do_install:append() {
         printf '%s\n' "${FW_INSTALL_DIR}" > ${D}${sysconfdir}/dfx-mgrd/default_firmware
     fi
 
-    # Cortex-R5 firmware into /lib/firmware for manual remoteproc loading:
+    # Cortex-R5 firmware in the dfx-mgr RPU base layout (dfx-mgr >= 2026.1):
+    #   /lib/firmware/xilinx/${RPU_FW_BASE}/rpu/<core>/R5c<core>.elf
+    # Load on target (PL must be loaded first):
+    #   dfx-mgr-client -loadByName R5c0   # -> remoteproc0 (R5 core 0)
+    #   dfx-mgr-client -loadByName R5c1   # -> remoteproc1 (R5 core 1)
+    install -Dm 0644 ${WORKDIR}/R5c0.elf \
+        ${D}${nonarch_base_libdir}/firmware/xilinx/${RPU_FW_BASE}/rpu/0/R5c0.elf
+    install -Dm 0644 ${WORKDIR}/R5c1.elf \
+        ${D}${nonarch_base_libdir}/firmware/xilinx/${RPU_FW_BASE}/rpu/1/R5c1.elf
+
+    # Also keep flat /lib/firmware copies so the manual remoteproc method still works:
     #   echo R5c0.elf > /sys/class/remoteproc/remoteproc0/firmware ; echo start > .../state
     install -Dm 0644 ${WORKDIR}/R5c0.elf ${D}${nonarch_base_libdir}/firmware/R5c0.elf
     install -Dm 0644 ${WORKDIR}/R5c1.elf ${D}${nonarch_base_libdir}/firmware/R5c1.elf
 }
 
-do_install[vardeps] += "FW_INSTALL_DIR KR260DEMO_DFX_AUTOLOAD"
+do_install[vardeps] += "FW_INSTALL_DIR KR260DEMO_DFX_AUTOLOAD RPU_FW_BASE"
 
 # The class's FILES:${PN} already claims /lib/firmware/xilinx/${FW_INSTALL_DIR};
-# add the optional dfx-mgr boot marker and the two R5 ELFs we drop directly in
-# /lib/firmware.
+# add the optional dfx-mgr boot marker, the RPU base tree, and the two flat R5 ELFs.
 FILES:${PN} += " \
     ${sysconfdir}/dfx-mgrd/default_firmware \
+    ${nonarch_base_libdir}/firmware/xilinx/${RPU_FW_BASE} \
     ${nonarch_base_libdir}/firmware/R5c0.elf \
     ${nonarch_base_libdir}/firmware/R5c1.elf \
 "

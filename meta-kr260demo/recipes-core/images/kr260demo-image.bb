@@ -29,6 +29,23 @@ IMAGE_INSTALL:append = " \
 # This product image does not need the generated machine's VCU codec stack.
 IMAGE_FEATURES:remove = "hwcodecs"
 
+# --- kria-qspi workaround (meta-kria v2026.1) --------------------------------
+# meta-kria v2026.1 narrowed kria-qspi's COMPATIBLE_MACHINE to *-multidomain
+# machines only (commit 0e181e1 "kria-qspi: restrict compatible machines to
+# multidomain"), but the shared SOM include k26-smk.inc still does an
+# unconditional `EXTRA_IMAGEDEPENDS += "kria-qspi"`. On our single-domain
+# kr260demo that forces a dependency on a recipe that refuses to build for the
+# machine, giving: ERROR: Nothing PROVIDES 'kria-qspi' (not in COMPATIBLE_MACHINE).
+# Per AMD's Kria Yocto docs the single-domain boot artifact is boot.bin
+# (xilinx-bootbin); kria-qspi is the multidomain QSPI A/B/recovery image. So we
+# drop the unbuildable dep here.
+#
+# Guard: the removal only fires when the machine is NOT multidomain. When we
+# later regenerate against a *-multidomain machine (where kria-qspi IS
+# compatible), 'multidomain' appears in MACHINEOVERRIDES, the removal expands to
+# empty, and the QSPI image is built normally.
+EXTRA_IMAGEDEPENDS:remove = "${@'' if 'multidomain' in (d.getVar('MACHINEOVERRIDES') or '') else 'kria-qspi'}"
+
 # Board-specific dev flow: TFTP/JTAG boot export (provided by meta-fpga-util).
 IMAGE_CLASSES:append = " export-tftpboot-file"
 JTAG_LOADER_TCL = "${FPGA_UTIL_LAYERDIR}/recipes-core/images/files/load-jtag-image.tcl"
