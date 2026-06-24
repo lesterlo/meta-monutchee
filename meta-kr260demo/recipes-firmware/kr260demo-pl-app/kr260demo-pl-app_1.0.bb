@@ -14,7 +14,7 @@ LICENSE = "CLOSED"
 # firmware-name to "${PN}.bin", and installs the app (bin + dtbo + shell.json) under
 # /lib/firmware/xilinx/${FW_INSTALL_DIR}/. DEPENDS (dtc-native bootgen-native) and the
 # virtual/kernel:do_configure compile dependency come from the class.
-inherit dfx_user_dts
+inherit dfx_user_dts systemd
 
 COMPATIBLE_MACHINE = "^kr260demo$"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
@@ -23,8 +23,14 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 # xmutil uses, NOT the .bin/.dtbo basenames, which are ${PN}-derived and internal.)
 FW_INSTALL_DIR = "kr260demo"
 
-# Kill switch for boot-time PL loading by dfx-mgr-fw-load.service. The PL app is
-# still packaged either way; this controls only /etc/dfx-mgrd/default_firmware.
+# Boot-time autoload switch. When "1":
+#   - PL: /etc/dfx-mgrd/default_firmware = kr260demo, loaded by dfx-mgr-fw-load.service.
+#   - R5: kr260demo-rpu-load.service is enabled and loads R5c0/R5c1 after the PL.
+# dfx-mgr's default_firmware only takes ONE name, so the R5 cores need their own
+# oneshot service -- it cannot be done with default_firmware alone.
+# The PL app and the service+script are always packaged; this only controls whether
+# they auto-run at boot. When "0" both stay present but inert (load them by hand:
+# xmutil loadapp kr260demo; dfx-mgr-client -loadByName R5c0; ... R5c1).
 KR260DEMO_DFX_AUTOLOAD ?= "0"
 
 # dfx-mgr (>= 2026.1) RPU base directory name.
@@ -60,6 +66,8 @@ SRC_URI = " \
     file://pl.dtso \
     file://R5c0.elf \
     file://R5c1.elf \
+    file://kr260demo-rpu-load \
+    file://kr260demo-rpu-load.service \
 "
 
 FW_PATH = "${D}${nonarch_base_libdir}/firmware/xilinx/${FW_INSTALL_DIR}"
@@ -90,9 +98,19 @@ do_install:append() {
     #   echo R5c0.elf > /sys/class/remoteproc/remoteproc0/firmware ; echo start > .../state
     install -Dm 0644 ${WORKDIR}/R5c0.elf ${D}${nonarch_base_libdir}/firmware/R5c0.elf
     install -Dm 0644 ${WORKDIR}/R5c1.elf ${D}${nonarch_base_libdir}/firmware/R5c1.elf
+
+    # R5 boot-autoload oneshot (loads R5c0/R5c1 after the PL). Always installed;
+    # enabled only when KR260DEMO_DFX_AUTOLOAD=1 (see SYSTEMD_AUTO_ENABLE below).
+    install -Dm 0755 ${WORKDIR}/kr260demo-rpu-load ${D}${bindir}/kr260demo-rpu-load
+    install -Dm 0644 ${WORKDIR}/kr260demo-rpu-load.service \
+        ${D}${systemd_system_unitdir}/kr260demo-rpu-load.service
 }
 
 do_install[vardeps] += "FW_INSTALL_DIR KR260DEMO_DFX_AUTOLOAD RPU_FW_BASE"
+
+# Package + (conditionally) enable the R5 autoload service.
+SYSTEMD_SERVICE:${PN} = "kr260demo-rpu-load.service"
+SYSTEMD_AUTO_ENABLE:${PN} = "${@bb.utils.contains_any('KR260DEMO_DFX_AUTOLOAD', '1', 'enable', 'disable', d)}"
 
 # The class's FILES:${PN} already claims /lib/firmware/xilinx/${FW_INSTALL_DIR};
 # add the optional dfx-mgr boot marker, the RPU base tree, and the two flat R5 ELFs.
@@ -101,6 +119,8 @@ FILES:${PN} += " \
     ${nonarch_base_libdir}/firmware/xilinx/${RPU_FW_BASE} \
     ${nonarch_base_libdir}/firmware/R5c0.elf \
     ${nonarch_base_libdir}/firmware/R5c1.elf \
+    ${bindir}/kr260demo-rpu-load \
+    ${systemd_system_unitdir}/kr260demo-rpu-load.service \
 "
 
 # Prebuilt R5 (armv7r) ELFs + a bitstream blob; skip host/target arch QA.
