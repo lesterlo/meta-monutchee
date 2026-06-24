@@ -14,8 +14,6 @@ echo 'set_dt_param \
 
 ## gen-machine-conf
 
-Note that the "k26-smk-kr-sdt.yaml" already have `CONFIG_YOCTO_BBMC_CORTEXR5_0_FREERTOS=y` enabled
-
 ```bash
 #Assume your are in yocto-build/build
 
@@ -25,6 +23,7 @@ gen-machineconf \
   --hw-description ../../runtime-generated/vivado_SDT_out/ \
   -c conf -D \
   --machine-name kr260demo \
+  --add-config CONFIG_YOCTO_BBMC_CORTEXR5_0_FREERTOS=y \
   --add-config CONFIG_YOCTO_BBMC_CORTEXR5_1_FREERTOS=y \
   --domain-file ../sources/meta-monutchee/meta-kr260demo/recipes-bsp/domainyaml/openamp-overlay-zynqmp.yaml
 ```
