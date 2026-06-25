@@ -94,11 +94,6 @@ do_install:append() {
     install -Dm 0644 ${WORKDIR}/R5c1.elf \
         ${D}${nonarch_base_libdir}/firmware/xilinx/${RPU_FW_BASE}/rpu/1/R5c1.elf
 
-    # Also keep flat /lib/firmware copies so the manual remoteproc method still works:
-    #   echo R5c0.elf > /sys/class/remoteproc/remoteproc0/firmware ; echo start > .../state
-    install -Dm 0644 ${WORKDIR}/R5c0.elf ${D}${nonarch_base_libdir}/firmware/R5c0.elf
-    install -Dm 0644 ${WORKDIR}/R5c1.elf ${D}${nonarch_base_libdir}/firmware/R5c1.elf
-
     # R5 boot-autoload oneshot (loads R5c0/R5c1 after the PL). Always installed;
     # enabled only when KR260DEMO_DFX_AUTOLOAD=1 (see SYSTEMD_AUTO_ENABLE below).
     install -Dm 0755 ${WORKDIR}/kr260demo-rpu-load ${D}${bindir}/kr260demo-rpu-load
@@ -117,8 +112,6 @@ SYSTEMD_AUTO_ENABLE:${PN} = "${@bb.utils.contains_any('KR260DEMO_DFX_AUTOLOAD', 
 FILES:${PN} += " \
     ${sysconfdir}/dfx-mgrd/default_firmware \
     ${nonarch_base_libdir}/firmware/xilinx/${RPU_FW_BASE} \
-    ${nonarch_base_libdir}/firmware/R5c0.elf \
-    ${nonarch_base_libdir}/firmware/R5c1.elf \
     ${bindir}/kr260demo-rpu-load \
     ${systemd_system_unitdir}/kr260demo-rpu-load.service \
 "
