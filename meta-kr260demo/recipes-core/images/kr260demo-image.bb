@@ -40,11 +40,19 @@ IMAGE_FEATURES:remove = "hwcodecs"
 # (xilinx-bootbin); kria-qspi is the multidomain QSPI A/B/recovery image. So we
 # drop the unbuildable dep here.
 #
-# Guard: the removal only fires when the machine is NOT multidomain. When we
-# later regenerate against a *-multidomain machine (where kria-qspi IS
-# compatible), 'multidomain' appears in MACHINEOVERRIDES, the removal expands to
-# empty, and the QSPI image is built normally.
-EXTRA_IMAGEDEPENDS:remove = "${@'' if 'multidomain' in (d.getVar('MACHINEOVERRIDES') or '') else 'kria-qspi'}"
+# Guards -- the removal fires only when BOTH conditions hold:
+#  1. Release: the COMPATIBLE_MACHINE restriction was introduced in meta-kria
+#     v2026.1. On earlier releases kria-qspi IS buildable for single-domain
+#     machines, so dropping it there would be wrong. XILINX_RELEASE_VERSION (set
+#     by meta-xilinx-core/conf/layer.conf) tracks the checked-out xlnx-rel-vYYYY.N
+#     tag. Add releases to KRIA_QSPI_WORKAROUND_RELEASES if a later one still
+#     ships the unconditional dep -- or drop the value once k26-smk.inc is fixed
+#     upstream so we stop masking a then-real dependency.
+#  2. Machine: only non-multidomain machines hit the mismatch. On a
+#     *-multidomain machine kria-qspi IS compatible, so 'multidomain' in
+#     MACHINEOVERRIDES makes the removal expand to empty and the QSPI image builds.
+KRIA_QSPI_WORKAROUND_RELEASES = "v2026.1"
+EXTRA_IMAGEDEPENDS:remove = "${@'kria-qspi' if (d.getVar('XILINX_RELEASE_VERSION') in (d.getVar('KRIA_QSPI_WORKAROUND_RELEASES') or '').split() and 'multidomain' not in (d.getVar('MACHINEOVERRIDES') or '')) else ''}"
 
 # Board-specific dev flow: TFTP/JTAG boot export (provided by meta-fpga-util).
 IMAGE_CLASSES:append = " export-tftpboot-file"
